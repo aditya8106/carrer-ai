@@ -1,0 +1,13 @@
+project_id = "xwrpagczvcaocfpsucmj"
+
+[functions.chat]
+verify_jwt = false
+
+[functions.resume-analyze]
+verify_jwt = false
+
+[functions.job-suggestions]
+verify_jwt = false
+
+[functions.scam-detect]
+verify_jwt = false
