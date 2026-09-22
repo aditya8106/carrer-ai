@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FileText, Loader2, CheckCircle, AlertTriangle, Briefcase, Star, Lightbulb, Send } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiPost } from "@/lib/api";
 
 interface ResumeAnalysis {
   experience_level: string;
@@ -41,11 +41,10 @@ export default function ResumeAnalysis() {
     setResumeText("");
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("resume-analyze", {
-        body: { resumeText: userMessage }
-      });
-
-      if (fnError) throw fnError;
+      const data = await apiPost<{ resumeText: string }, { analysis: ResumeAnalysis; error?: string }>(
+        "/api/resume-analyze",
+        { resumeText: userMessage }
+      );
       if (data?.error) throw new Error(data.error);
 
       setAnalysis(data.analysis);
@@ -60,8 +59,8 @@ export default function ResumeAnalysis() {
         }
       ]);
 
-    } catch (e: any) {
-      setError(e.message || "Analysis failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Analysis failed");
     }
 
     setIsLoading(false);

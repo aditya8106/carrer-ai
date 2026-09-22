@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Briefcase, Loader2, TrendingUp, ExternalLink, Send, Target } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiPost } from "@/lib/api";
 
 interface JobSuggestion {
   title: string;
@@ -50,12 +50,10 @@ export default function JobSuggestions() {
     setResumeSummary("");
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke(
-        "job-suggestions",
-        { body: { resumeSummary: userMessage } }
+      const data = await apiPost<{ resumeSummary: string }, { suggestions?: JobSuggestion[]; error?: string }>(
+        "/api/job-suggestions",
+        { resumeSummary: userMessage }
       );
-
-      if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
 
       const aiJobs = data.suggestions || [];
@@ -70,8 +68,8 @@ export default function JobSuggestions() {
         }
       ]);
 
-    } catch (e: any) {
-      setError(e.message || "Failed to get suggestions");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to get suggestions");
     }
 
     setIsLoading(false);

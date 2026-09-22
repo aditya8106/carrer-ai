@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ShieldAlert, Loader2, AlertTriangle, CheckCircle, XCircle, Send } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { apiPost } from "@/lib/api";
 
 interface ScamResult {
   risk_score: number;
@@ -39,11 +39,10 @@ export default function ScamDetection() {
     setJobDescription("");
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("scam-detect", {
-        body: { jobDescription: userMessage }
-      });
-
-      if (fnError) throw fnError;
+      const data = await apiPost<{ jobDescription: string }, { result: ScamResult; error?: string }>(
+        "/api/scam-detect",
+        { jobDescription: userMessage }
+      );
       if (data?.error) throw new Error(data.error);
 
       setResult(data.result);
@@ -57,8 +56,8 @@ export default function ScamDetection() {
         }
       ]);
 
-    } catch (e: any) {
-      setError(e.message || "Detection failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Detection failed");
     }
 
     setIsLoading(false);
