@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { Send, Bot, User, Sparkles } from "lucide-react";
+import { apiStreamPost } from "@/lib/api";
 
 type Message = { role: "user" | "assistant"; content: string };
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 interface Props {
   conversationId: string | null;
@@ -58,17 +56,7 @@ export default function ChatSection({ conversationId, getMessages, saveMessages,
     let assistantSoFar = "";
 
     try {
-      const resp = await fetch(`${SUPABASE_URL}/functions/v1/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          apikey: SUPABASE_KEY,
-        },
-        body: JSON.stringify({ messages: newMessages }),
-      });
-
-      if (!resp.ok || !resp.body) throw new Error("Failed to connect");
+      const resp = await apiStreamPost("/api/chat", { messages: newMessages });
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
@@ -101,7 +89,9 @@ export default function ChatSection({ conversationId, getMessages, saveMessages,
                 return updated;
               });
             }
-          } catch { }
+          } catch {
+            continue;
+          }
         }
       }
     } catch (e) {
